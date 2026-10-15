@@ -8,8 +8,21 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD:root
+          MYSQL_DATABASE:symfony_test
+          MYSQL_USER:symfony
+          MYSQL_PASSWORD:symfony
+        ports:
+          -3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+    
     steps:
-    - uses: actions/checkout@v3  
+    - uses: actions/checkout@v3 
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
@@ -23,3 +36,16 @@ jobs:
       run: composer install --prefer-dist --no-progress
     #- name: Run tests
     #  run: php bin/phpunit
+
+    -name: Setup test databse
+      env:
+        DATABASE_URL: mysql://symfony:symfony@127.0.0.1:3306/symfony_test
+      run: 
+        php bin/console doctrine:migrations:migrate --no-interaction
+        php bin/console doctrine:fixtures:load --no-interaction --env=test
+
+    -name: Run test with coverage
+      env:
+        DATABASE_URL: mysql://symfony:symfony@127.0.0.1:3306/symfony_test
+      run:
+        php bin/phpunit --coverage-text --coverage-clover=coverage.xml
