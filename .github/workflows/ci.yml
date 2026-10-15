@@ -34,8 +34,8 @@ jobs:
       run: composer validate --strict
     - name: Install dependencies
       run: composer install --prefer-dist --no-progress
-    #- name: Run tests
-    #  run: php bin/phpunit
+    - name: Run tests
+      run: php bin/phpunit
 
     -name: Setup test databse
       env:
